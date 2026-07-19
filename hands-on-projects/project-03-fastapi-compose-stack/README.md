@@ -59,3 +59,28 @@ project-03-fastapi-compose-stack/
 ## Status
 
 🚧 In Development
+
+## Module 1 - FastAPI Fundamentals
+
+Built a production-style FastAPI application structure.
+
+Learned:
+
+- FastAPI application lifecycle
+- Uvicorn ASGI server
+- Routing with APIRouter
+- Pydantic validation
+- Service layer architecture
+- Dependency Injection
+
+Architecture:
+
+Client
+ ↓
+FastAPI Router
+ ↓
+Service Layer
+ ↓
+Database (future)
+
+Dependency Injection applied
