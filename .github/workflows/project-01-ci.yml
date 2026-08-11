@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "hands-on-projects/project-01-product-catalog-api/**"
+  
+  workflow_dispatch: 
 
 jobs:
   test-and-build:
