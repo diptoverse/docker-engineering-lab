@@ -1,9 +1,11 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.product import Product
 from app.schemas.product import ProductResponse, ProductCreate
+from app.redis_client import redis_client
 
 router = APIRouter()
 
@@ -15,6 +17,16 @@ def get_products(db: Session = Depends(get_db)):
 
 @router.get("/products/{id}", response_model=ProductResponse)
 def get_product(id: int, db: Session = Depends(get_db)):
+    cache_key = f"product:{id}"
+
+    cached_product = redis_client.get(cache_key)
+
+    if cached_product:
+        print("Cache Hit")
+        return json.loads(str(cached_product))
+
+    print("Cache Miss")
+
     product = db.query(Product).filter(Product.id == id).first()
 
     if product is None:
@@ -22,6 +34,18 @@ def get_product(id: int, db: Session = Depends(get_db)):
             status_code=404,
             detail="Product not found"
         )
+
+    product_data = {
+        "id": product.id,
+        "name": product.name,
+        "price": product.price,
+        "stock": product.stock,
+    }
+
+    redis_client.set(
+        cache_key,
+        json.dumps(product_data)
+    )
     
     return product
 
@@ -60,6 +84,8 @@ def update_product(
     db.commit()
     db.refresh(existing_product)
 
+    redis_client.delete(f"product:{id}")
+
     return existing_product
 
 @router.delete("/products/{id}")
@@ -74,6 +100,9 @@ def delete_product(id: int, db: Session = Depends(get_db)):
 
     db.delete(product)
     db.commit()
+
+    redis_client.delete(f"product:{id}")
+    print("Cache Invalidated", id)
 
     return {
         "message": "Product deleted successfully"

@@ -13,5 +13,9 @@ services:
     ports:
       - "8000:8000"
 
+   redis: 
+     image: redis:7
+
+
 volumes:
     postgres_data:
